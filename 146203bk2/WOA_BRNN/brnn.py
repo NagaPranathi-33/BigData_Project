@@ -15,6 +15,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 logging.getLogger('tensorflow').disabled = True
 warnings.filterwarnings("ignore")
 
+FAST_EPOCHS = 2
+
+
+def _to_train_fraction(value):
+    return value / 100 if value > 1 else value
+
+
 # Enable GPU acceleration with memory growth if GPUs available
 gpu_devices = tf.config.experimental.list_physical_devices('GPU')
 if gpu_devices:
@@ -40,12 +47,12 @@ def prediction(trainX, trainY, testX, y_test):
     init_wei = brnn.get_weights()
     model_weight = [iw * w for iw, w in zip(init_wei, Whale.algm())]
 
-    brnn.fit(trainX, trainY, epochs=5, batch_size=10, verbose=0)
+    brnn.fit(trainX, trainY, epochs=FAST_EPOCHS, batch_size=32, verbose=0)
     Predict = brnn.predict(testX)
     return Predict
 
 def classify(xx, yy, tr, A, Tpr, Tnr):
-    tr = tr / 100
+    tr = _to_train_fraction(tr)
     X_train, X_test, y_train, y_test = train_test_split(xx, yy, train_size=tr)
     predict = prediction(np.array(X_train), np.array(y_train), np.array(X_test), y_test)
 
