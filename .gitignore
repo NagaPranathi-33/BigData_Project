@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+*.csv
+*.h5
+*.zip
+*.rar
+146203bk2/Main/Data/
+146203bk2/Main/Processed/
+results/temp/
