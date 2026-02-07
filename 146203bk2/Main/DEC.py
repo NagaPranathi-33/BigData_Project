@@ -57,7 +57,7 @@ class DEC:
         clustering_layer = ClusteringLayer(self.n_clusters, name='clustering')(self.encoder.output)
         self.model = Model(inputs=self.encoder.input, outputs=clustering_layer)
 
-    def pretrain(self, x, optimizer='adam', epochs=200, batch_size=256, save_dir='results/temp'):
+    def pretrain(self, x, optimizer='adam', epochs=5, batch_size=1024, save_dir='results/temp'):
         print(f"Pretraining autoencoder on data shape: {x.shape}")
 
         # Ensure the directory exists
@@ -65,7 +65,7 @@ class DEC:
 
         self.autoencoder.compile(optimizer=optimizer, loss='mse')
         csv_logger = callbacks.CSVLogger(f'{save_dir}/pretrain_log.csv')
-        self.autoencoder.fit(x, x, batch_size=batch_size, epochs=epochs, callbacks=[csv_logger])
+        self.autoencoder.fit(x, x, batch_size=batch_size, epochs=epochs, callbacks=[csv_logger], verbose=0)
         
         # ✅ Fix: filename must end in `.weights.h5`
         self.autoencoder.save_weights(f'{save_dir}/ae_weights.weights.h5')
@@ -137,7 +137,7 @@ def main(data, target):
     dec = DEC(dims=[data.shape[-1], 500, 500, 2000, 10], n_clusters=nc)
 
     # Pretrain autoencoder before clustering
-    dec.pretrain(data, epochs=20)  # Use fewer epochs for faster testing or more for better results
+    dec.pretrain(data, epochs=3, batch_size=1024)  # fast pretraining defaults
 
     cluster_labels = dec.fit(data)
 

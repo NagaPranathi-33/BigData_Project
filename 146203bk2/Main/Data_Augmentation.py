@@ -4,8 +4,13 @@ import itertools
 def data_aug(input_data, clas,dts): # oversampling
     input_data = np.array(input_data)
     clas = np.array(clas)
-    if dts=='Adult':total_instance = 12000  # existing rows + extra rows to be added
-    else: total_instance = 1000
+
+    # keep augmentation bounded to avoid very large training sets and long runtimes
+    base_count = max(len(clas), len(input_data))
+    if dts == 'Adult':
+        total_instance = min(max(base_count * 2, 2000), 4000)
+    else:
+        total_instance = min(max(base_count * 2, 500), 1000)
     # input_data = list(itertools.chain(*input_data))
     # clas = list(itertools.chain(*clas))
     def augment(data,cls, ins_total):
