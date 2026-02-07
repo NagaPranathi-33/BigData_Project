@@ -6,6 +6,13 @@ from sklearn.model_selection import train_test_split
 from Adaptive_EBat_DBN.support_fn import metric
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MAX_EPOCHS = 500
+LOSS_TOL = 1e-5
+PATIENCE = 20
+
+
+def _to_train_fraction(value):
+    return value / 100 if value > 1 else value
 
 # Define Neural Network Class
 class NeuralNetwork(nn.Module):
@@ -18,7 +25,7 @@ class NeuralNetwork(nn.Module):
         return self.activation(self.fc(x))
 
 def classify(x1, y1, tr, A, Tpr, Tnr):
-    tr = tr / 100
+    tr = _to_train_fraction(tr)
     x = torch.tensor(np.asarray(x1), dtype=torch.float32).to(device)
     y = torch.tensor(np.asarray(y1), dtype=torch.float32).to(device)
     
@@ -31,13 +38,24 @@ def classify(x1, y1, tr, A, Tpr, Tnr):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
     
-    # Train model
-    for _ in range(10000):
+    # Train model (fast mode with simple early stopping)
+    best_loss = float("inf")
+    stale_epochs = 0
+    for _ in range(MAX_EPOCHS):
         optimizer.zero_grad()
         outputs = model(train_inputs)
         loss = criterion(outputs, train_outputs)
         loss.backward()
         optimizer.step()
+
+        loss_val = float(loss.item())
+        if best_loss - loss_val > LOSS_TOL:
+            best_loss = loss_val
+            stale_epochs = 0
+        else:
+            stale_epochs += 1
+            if stale_epochs >= PATIENCE:
+                break
     
     with torch.no_grad():
         pred = model(test_inputs)
