@@ -20,6 +20,12 @@ UPDATE_TARGET_EVERY = 5
 MODEL_NAME = '2x256'
 MIN_REWARD = -200
 MEMORY_FRACTION = 0.20
+FAST_EPOCHS = 2
+
+
+def _to_train_fraction(value):
+    """Accept either percentage (0-100) or fraction (0-1)."""
+    return value / 100 if value > 1 else value
 
 def classify(x_train, x_test, y_train, y_test, tr):
     def adapt_learning_rate(epoch):
@@ -70,7 +76,7 @@ def classify(x_train, x_test, y_train, y_test, tr):
             model_weight = weights * SSPO.algm()
             model.set_weights(model_weight)
 
-            model.fit(train_x, train_y, epochs=5, batch_size=1000, verbose=0, callbacks=[my_lr_scheduler])
+            model.fit(train_x, train_y, epochs=FAST_EPOCHS, batch_size=512, verbose=0, callbacks=[my_lr_scheduler])
 
             predictions = model.predict(test_x)
             predicted_classes = np.argmax(predictions, axis=1)
@@ -85,7 +91,7 @@ def classify(x_train, x_test, y_train, y_test, tr):
 
 
 def cal_metrics(xx, yy, tpr, A, Tpr, Tnr):
-    tr = tpr / 100
+    tr = _to_train_fraction(tpr)
     x_train, x_test, y_train, y_test = train_test_split(xx, yy, train_size=tr)
     Y_tr = y_train.copy()
     pred = classify(x_train, x_test, y_train, y_test, tr)

@@ -5,14 +5,22 @@ from CBF_DBN import chicken
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+FAST_RBM_EPOCHS = 1
+FAST_MLP_EPOCHS = 2
+
+
+def _to_train_fraction(value):
+    return value / 100 if value > 1 else value
+
+
 class DBN(object):
     def __init__(self, layers, n_labels):
         self.rbms = []
         self.n_labels = n_labels
         for n_v, n_h in zip(layers[:-1], layers[1:]):
-            self.rbms.append(RBM(n_v, n_h, epochs=2, lr=0.1))
+            self.rbms.append(RBM(n_v, n_h, epochs=FAST_RBM_EPOCHS, lr=0.1))
         self.mlp = MLP(act_type='Sigmoid', opt_type='Adam', layers=layers + [n_labels],
-                       epochs=5, learning_rate=0.01, lmbda=1e-2)
+                       epochs=FAST_MLP_EPOCHS, learning_rate=0.01, lmbda=1e-2)
 
     def pretrain(self, x, ow):
         v = x
@@ -48,6 +56,7 @@ def classify(xx, yy, tr, A, Tpr, Tnr):
             test_y.extend([c] * (len(class_data) - tp))
         return train_x, train_y, test_x, test_y
 
+    tr = _to_train_fraction(tr) * 100
     train_x, train_y, test_x, test_y = train_test_split(xx, yy, tr)
     opt_w = chicken.algm()  # obtain optimized weights
 
